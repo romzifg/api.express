@@ -1,0 +1,57 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String
+  role          Role
+  refreshTokens RefreshToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuthAuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  event     AuthEvent
+  ipAddress String?
+  userAgent String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+}
+
+enum AuthEvent {
+  LOGIN_SUCCESS
+  LOGIN_FAILED
+  TOKEN_REFRESH
+  TOKEN_REUSE_DETECTED
+  LOGOUT
+  LOGOUT_ALL
+  TOKEN_EXPIRED
+  CSRF_FAILED
+  RATE_LIMITED
+}
+
+
+enum Role {
+  ADMIN
+  USER
+}
